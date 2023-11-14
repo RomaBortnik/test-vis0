@@ -1,5 +1,8 @@
+import { useState, useCallback, useEffect } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
-import { useState, useCallback } from "react";
+import { ref, onValue } from "firebase/database";
+
+import db from "../database/config";
 import Map from "./Map";
 import Loader from "./Loader";
 
@@ -12,14 +15,34 @@ const center = {
 
 const App = () => {
   const [markers, setMarkers] = useState([]);
+
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: API_KEY,
   });
 
+  useEffect(() => {
+    onValue(ref(db), (snapshot) => {
+      const data = snapshot.val();
+
+      if (data !== null) {
+        const markers = Object.values(data);
+        setMarkers(markers);
+      }
+    });
+  }, []);
+
   const onMarkerAdd = useCallback(
-    (coordinates) => {
-      setMarkers([...markers, coordinates]);
+    (position) => {
+      const currentTimestamp = new Date();
+      setMarkers([
+        ...markers,
+        {
+          index: markers.length + 1,
+          position,
+          timestamp: currentTimestamp.toISOString(),
+        },
+      ]);
     },
     [markers]
   );

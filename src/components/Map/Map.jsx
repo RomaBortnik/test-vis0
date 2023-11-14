@@ -1,7 +1,11 @@
-import { GoogleMap } from "@react-google-maps/api";
 import { useCallback, useRef } from "react";
-import { MapWrapper } from "./Map.styled";
+import { GoogleMap } from "@react-google-maps/api";
+import { set, ref } from "firebase/database";
+import { nanoid } from "nanoid";
+
+import db from "../../database/config";
 import Marker from "../Marker";
+import { MapWrapper } from "./Map.styled";
 
 const containerStyle = {
   width: "100%",
@@ -25,21 +29,36 @@ const defaultOptions = {
 const Map = ({ center, markers, onMarkerAdd }) => {
   const mapRef = useRef(undefined);
 
-  const onLoad = useCallback(function callback(map) {
+  const onLoad = useCallback((map) => {
     mapRef.current = map;
   }, []);
 
-  const onUnmount = useCallback(function callback(map) {
+  const onUnmount = useCallback((map) => {
     mapRef.current = undefined;
   }, []);
+
+  const addNewMarkerToDatabase = useCallback(
+    (location) => {
+      const id = nanoid();
+      const currentTimestamp = new Date();
+
+      set(ref(db, `/${id}`), {
+        index: markers.length + 1,
+        location,
+        timestamp: currentTimestamp.toISOString(),
+      });
+    },
+    [markers.length]
+  );
 
   const onClick = useCallback(
     (loc) => {
       const lat = loc.latLng.lat();
       const lng = loc.latLng.lng();
       onMarkerAdd({ lat, lng });
+      addNewMarkerToDatabase({ lat, lng });
     },
-    [onMarkerAdd]
+    [onMarkerAdd, addNewMarkerToDatabase]
   );
 
   return (
@@ -53,13 +72,15 @@ const Map = ({ center, markers, onMarkerAdd }) => {
         onClick={onClick}
         options={defaultOptions}
       >
-        <ul>
-          {markers.map((pos, index) => (
-            <li key={index}>
-              <Marker position={pos} number={`${index}`} />
-            </li>
-          ))}
-        </ul>
+        {markers.length > 0 && (
+          <ul>
+            {markers.map(({ location, index }) => (
+              <li key={index}>
+                <Marker position={location} number={`${index}`} />
+              </li>
+            ))}
+          </ul>
+        )}
       </GoogleMap>
     </MapWrapper>
   );

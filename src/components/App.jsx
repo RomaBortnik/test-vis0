@@ -1,5 +1,7 @@
 import { useJsApiLoader } from "@react-google-maps/api";
-import { Map } from "./Map";
+import { useState, useCallback } from "react";
+import Map from "./Map";
+import Loader from "./Loader";
 
 const API_KEY = process.env.REACT_APP_API_KEY;
 
@@ -9,12 +11,24 @@ const center = {
 };
 
 const App = () => {
+  const [markers, setMarkers] = useState([]);
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: API_KEY,
   });
 
-  return isLoaded ? <Map center={center} /> : <h2>Loading</h2>;
+  const onMarkerAdd = useCallback(
+    (coordinates) => {
+      setMarkers([...markers, coordinates]);
+    },
+    [markers]
+  );
+
+  return isLoaded ? (
+    <Map center={center} markers={markers} onMarkerAdd={onMarkerAdd} />
+  ) : (
+    <Loader />
+  );
 };
 
 export default App;

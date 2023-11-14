@@ -1,9 +1,7 @@
 import { useCallback, useRef } from "react";
 import { GoogleMap } from "@react-google-maps/api";
-import { set, ref } from "firebase/database";
-import { nanoid } from "nanoid";
+import PropTypes from "prop-types";
 
-import db from "../../database/config";
 import Marker from "../Marker";
 import { MapWrapper } from "./Map.styled";
 
@@ -37,28 +35,13 @@ const Map = ({ center, markers, onMarkerAdd }) => {
     mapRef.current = undefined;
   }, []);
 
-  const addNewMarkerToDatabase = useCallback(
-    (location) => {
-      const id = nanoid();
-      const currentTimestamp = new Date();
-
-      set(ref(db, `/${id}`), {
-        index: markers.length + 1,
-        location,
-        timestamp: currentTimestamp.toISOString(),
-      });
-    },
-    [markers.length]
-  );
-
   const onClick = useCallback(
     (loc) => {
       const lat = loc.latLng.lat();
       const lng = loc.latLng.lng();
       onMarkerAdd({ lat, lng });
-      addNewMarkerToDatabase({ lat, lng });
     },
-    [onMarkerAdd, addNewMarkerToDatabase]
+    [onMarkerAdd]
   );
 
   return (
@@ -84,6 +67,24 @@ const Map = ({ center, markers, onMarkerAdd }) => {
       </GoogleMap>
     </MapWrapper>
   );
+};
+
+Map.propTypes = {
+  center: PropTypes.shape({
+    lat: PropTypes.number.isRequired,
+    lng: PropTypes.number.isRequired,
+  }).isRequired,
+  markers: PropTypes.arrayOf(
+    PropTypes.shape({
+      index: PropTypes.number.isRequired,
+      timestamp: PropTypes.string.isRequired,
+      position: PropTypes.shape({
+        lat: PropTypes.number.isRequired,
+        lng: PropTypes.number.isRequired,
+      }),
+    })
+  ).isRequired,
+  onMarkerAdd: PropTypes.func.isRequired,
 };
 
 export default Map;

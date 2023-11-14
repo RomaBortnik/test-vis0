@@ -3,6 +3,7 @@ import { useJsApiLoader } from "@react-google-maps/api";
 import { ref, onValue } from "firebase/database";
 
 import db from "../database/config";
+import addMarker from "../database/addMarker";
 import Map from "./Map";
 import Loader from "./Loader";
 
@@ -24,25 +25,19 @@ const App = () => {
   useEffect(() => {
     onValue(ref(db), (snapshot) => {
       const data = snapshot.val();
-
       if (data !== null) {
-        const markers = Object.values(data);
-        setMarkers(markers);
+        setMarkers(Object.values(data));
       }
     });
   }, []);
 
   const onMarkerAdd = useCallback(
-    (position) => {
-      const currentTimestamp = new Date();
-      setMarkers([
-        ...markers,
-        {
-          index: markers.length + 1,
-          position,
-          timestamp: currentTimestamp.toISOString(),
-        },
-      ]);
+    async (position) => {
+      await addMarker(position, markers);
+      await onValue(ref(db), (snapshot) => {
+        const data = snapshot.val();
+        setMarkers(Object.values(data));
+      });
     },
     [markers]
   );

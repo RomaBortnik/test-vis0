@@ -2,7 +2,13 @@ import { Marker as GoogleMapMarker } from "@react-google-maps/api";
 import PropTypes from "prop-types";
 
 const Marker = ({ position, number }) => {
-  return <GoogleMapMarker position={position} label={number}></GoogleMapMarker>;
+  return (
+    <GoogleMapMarker
+      position={position}
+      label={number}
+      style={{ color: "black" }}
+    ></GoogleMapMarker>
+  );
 };
 
 Marker.propTypes = {

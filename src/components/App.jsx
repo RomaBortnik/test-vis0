@@ -34,7 +34,7 @@ const App = () => {
   const onMarkerAdd = useCallback(
     async (position) => {
       await addMarker(position, markers);
-      await onValue(ref(db), (snapshot) => {
+      onValue(ref(db), (snapshot) => {
         const data = snapshot.val();
         setMarkers(Object.values(data));
       });
